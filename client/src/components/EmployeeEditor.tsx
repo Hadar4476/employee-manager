@@ -1,11 +1,10 @@
 import { useState, useRef } from "react";
-
-import { useEmployees } from "../hooks/useEmployees";
 import {
+  type Employee,
   EmployeeStatus,
   type EmployeeFormData,
-  type Employee,
 } from "../types/employee";
+import { useEmployees } from "../hooks/useEmployees";
 
 interface EmployeeEditorProps {
   onClose: () => void;
@@ -20,14 +19,8 @@ const statusOptions = [
 ];
 
 const EmployeeEditor = ({ onClose, employee }: EmployeeEditorProps) => {
-  const {
-    createEmployee,
-    updateStatus,
-    updateProfilePicture,
-    isCreating,
-    isUpdatingStatus,
-    isUpdatingProfilePicture,
-  } = useEmployees();
+  const { createEmployee, updateEmployee, isCreating, isUpdating } =
+    useEmployees();
   const isEditMode = !!employee;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -66,20 +59,13 @@ const EmployeeEditor = ({ onClose, employee }: EmployeeEditorProps) => {
     if (!validate()) return;
 
     if (isEditMode) {
-      updateStatus(
-        { id: employee.id, status: formData.status },
+      updateEmployee(
         {
-          onSuccess: () => {
-            if (selectedFile) {
-              updateProfilePicture(
-                { id: employee.id, file: selectedFile },
-                { onSuccess: onClose },
-              );
-            } else {
-              onClose();
-            }
-          },
+          id: employee.id,
+          status: formData.status,
+          file: selectedFile ?? undefined,
         },
+        { onSuccess: onClose },
       );
     } else {
       createEmployee(
@@ -96,7 +82,7 @@ const EmployeeEditor = ({ onClose, employee }: EmployeeEditorProps) => {
     if (e.key === "Enter") handleSubmit();
   };
 
-  const isPending = isCreating || isUpdatingStatus || isUpdatingProfilePicture;
+  const isPending = isCreating || isUpdating;
 
   return (
     <div onKeyDown={handleKeyDown}>
@@ -190,7 +176,7 @@ const EmployeeEditor = ({ onClose, employee }: EmployeeEditorProps) => {
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end gap-3">
+      <div className="flex gap-3">
         <button
           onClick={handleSubmit}
           disabled={isPending}

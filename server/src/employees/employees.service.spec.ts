@@ -128,8 +128,8 @@ describe('EmployeesService', () => {
     });
   });
 
-  describe('updateStatus', () => {
-    it('should update and return the employee status', async () => {
+  describe('update', () => {
+    it('should update employee status', async () => {
       const updatedEmployee = {
         ...mockEmployee,
         status: EmployeeStatus.ON_VACATION,
@@ -137,7 +137,7 @@ describe('EmployeesService', () => {
       mockRepository.findOne.mockResolvedValue(mockEmployee);
       mockRepository.save.mockResolvedValue(updatedEmployee);
 
-      const result = await service.updateStatus(mockEmployee.id, {
+      const result = await service.update(mockEmployee.id, {
         status: EmployeeStatus.ON_VACATION,
       });
 
@@ -145,11 +145,38 @@ describe('EmployeesService', () => {
       expect(mockRepository.save).toHaveBeenCalled();
     });
 
+    it('should update status and upload profile picture when file is provided', async () => {
+      const mockFile = {
+        originalname: 'photo.jpg',
+        buffer: Buffer.from('fake-image'),
+        mimetype: 'image/jpeg',
+      } as Express.Multer.File;
+
+      mockS3Send.mockResolvedValue({});
+      mockRepository.findOne.mockResolvedValue(mockEmployee);
+      mockRepository.save.mockResolvedValue({
+        ...mockEmployee,
+        status: EmployeeStatus.ON_VACATION,
+        profilePictureUrl:
+          'https://fake-bucket.s3.eu-central-1.amazonaws.com/profile-pictures/photo.jpg',
+      });
+
+      const result = await service.update(
+        mockEmployee.id,
+        { status: EmployeeStatus.ON_VACATION },
+        mockFile,
+      );
+
+      expect(mockS3Send).toHaveBeenCalled();
+      expect(result.profilePictureUrl).toBeTruthy();
+      expect(result.status).toEqual(EmployeeStatus.ON_VACATION);
+    });
+
     it('should throw NotFoundException when employee does not exist', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
       await expect(
-        service.updateStatus('non-existent-id', {
+        service.update('non-existent-id', {
           status: EmployeeStatus.ON_VACATION,
         }),
       ).rejects.toThrow(NotFoundException);

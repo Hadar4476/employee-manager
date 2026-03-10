@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Employee } from './entities/employee.entity';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { UpdateEmployeeStatusDto } from './dto/update-employee-status.dto';
 import {
   S3Client,
   PutObjectCommand,
@@ -11,6 +10,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
+import { UpdateEmployeeDto } from './dto/update-employee.dto';
 
 @Injectable()
 export class EmployeesService {
@@ -63,38 +63,33 @@ export class EmployeesService {
     return this.employeeRepository.save(employee);
   }
 
-  async updateStatus(
+  async update(
     id: string,
-    updateEmployeeStatusDto: UpdateEmployeeStatusDto,
-  ): Promise<Employee> {
-    const employee = await this.findOneOrFail(id);
-    employee.status = updateEmployeeStatusDto.status;
-    return this.employeeRepository.save(employee);
-  }
-
-  async updateProfilePicture(
-    id: string,
-    file: Express.Multer.File,
+    updateEmployeeDto: UpdateEmployeeDto,
+    file?: Express.Multer.File,
   ): Promise<Employee> {
     const employee = await this.findOneOrFail(id);
 
-    if (employee.profilePictureUrl) {
-      await this.deleteFromS3(employee.profilePictureUrl);
+    employee.status = updateEmployeeDto.status;
+
+    if (file) {
+      if (employee.profilePictureUrl) {
+        await this.deleteFromS3(employee.profilePictureUrl);
+      }
+
+      const fileKey = `profile-pictures/${uuidv4()}-${file.originalname}`;
+      await this.s3Client.send(
+        new PutObjectCommand({
+          Bucket: this.bucketName,
+          Key: fileKey,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+        }),
+      );
+
+      employee.profilePictureUrl = `https://${this.bucketName}.s3.${this.configService.get<string>('AWS_REGION')}.amazonaws.com/${fileKey}`;
     }
 
-    const fileKey = `profile-pictures/${uuidv4()}-${file.originalname}`;
-
-    await this.s3Client.send(
-      new PutObjectCommand({
-        Bucket: this.bucketName,
-        Key: fileKey,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-      }),
-    );
-
-    const profilePictureUrl = `https://${this.bucketName}.s3.${this.configService.get<string>('AWS_REGION')}.amazonaws.com/${fileKey}`;
-    employee.profilePictureUrl = profilePictureUrl;
     return this.employeeRepository.save(employee);
   }
 

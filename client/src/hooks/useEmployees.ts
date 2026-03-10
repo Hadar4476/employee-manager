@@ -34,27 +34,22 @@ export const useEmployees = () => {
     },
   });
 
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: EmployeeStatus }) =>
-      employeesApi.updateStatus(id, status),
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      status,
+      file,
+    }: {
+      id: string;
+      status: EmployeeStatus;
+      file?: File;
+    }) => employeesApi.update(id, status, file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: EMPLOYEES_QUERY_KEY });
-      toast.success("Status updated successfully");
+      toast.success("Employee updated successfully");
     },
     onError: () => {
-      toast.error("Failed to update status");
-    },
-  });
-
-  const updateProfilePictureMutation = useMutation({
-    mutationFn: ({ id, file }: { id: string; file: File }) =>
-      employeesApi.updateProfilePicture(id, file),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: EMPLOYEES_QUERY_KEY });
-      toast.success("Profile picture updated successfully");
-    },
-    onError: () => {
-      toast.error("Failed to update profile picture");
+      toast.error("Failed to update employee");
     },
   });
 
@@ -74,12 +69,10 @@ export const useEmployees = () => {
     isLoading,
     isError,
     createEmployee: createMutation.mutate,
-    updateStatus: updateStatusMutation.mutate,
-    updateProfilePicture: updateProfilePictureMutation.mutate,
+    updateEmployee: updateMutation.mutate,
     deleteEmployee: deleteMutation.mutate,
     isCreating: createMutation.isPending,
-    isUpdatingStatus: updateStatusMutation.isPending,
-    isUpdatingProfilePicture: updateProfilePictureMutation.isPending,
+    isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };
 };

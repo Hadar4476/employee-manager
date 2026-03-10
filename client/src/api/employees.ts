@@ -24,24 +24,19 @@ export const employeesApi = {
     return data;
   },
 
-  updateStatus: async (
+  update: async (
     id: string,
     status: EmployeeStatus,
+    file?: File,
   ): Promise<Employee> => {
-    const { data } = await axiosInstance.patch(`/employees/${id}/status`, {
-      status,
-    });
-    return data;
-  },
-
-  updateProfilePicture: async (id: string, file: File): Promise<Employee> => {
     const formData = new FormData();
-    formData.append("file", file);
-    const { data } = await axiosInstance.patch(
-      `/employees/${id}/profile-picture`,
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } },
-    );
+    formData.append("status", status);
+    if (file) {
+      formData.append("file", file);
+    }
+    const { data } = await axiosInstance.patch(`/employees/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return data;
   },
 

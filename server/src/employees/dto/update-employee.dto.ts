@@ -2,7 +2,7 @@ import { IsEnum, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EmployeeStatus } from '../entities/employee.entity';
 
-export class UpdateEmployeeStatusDto {
+export class UpdateEmployeeDto {
   @ApiProperty({ enum: EmployeeStatus, example: EmployeeStatus.WORKING })
   @IsEnum(EmployeeStatus)
   @IsNotEmpty()

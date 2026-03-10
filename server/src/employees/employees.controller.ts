@@ -16,7 +16,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { UpdateEmployeeStatusDto } from './dto/update-employee-status.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -25,6 +24,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { EmployeeStatus } from './entities/employee.entity';
+import { UpdateEmployeeDto } from './dto/update-employee.dto';
 
 @ApiTags('employees')
 @Controller('employees')
@@ -73,35 +73,22 @@ export class EmployeesController {
     return this.employeesService.create(createEmployeeDto, file);
   }
 
-  @Patch(':id/status')
-  @ApiOperation({ summary: 'Update employee status' })
-  @ApiResponse({ status: 200, description: 'Status updated successfully' })
-  @ApiResponse({ status: 404, description: 'Employee not found' })
-  updateStatus(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateEmployeeStatusDto: UpdateEmployeeStatusDto,
-  ) {
-    return this.employeesService.updateStatus(id, updateEmployeeStatusDto);
-  }
-
-  @Patch(':id/profile-picture')
-  @ApiOperation({ summary: 'Upload employee profile picture' })
+  @Patch(':id')
+  @ApiOperation({
+    summary: 'Update employee status and optionally profile picture',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
+        status: { type: 'string', enum: Object.values(EmployeeStatus) },
+        file: { type: 'string', format: 'binary' },
       },
+      required: ['status'],
     },
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Profile picture updated successfully',
-  })
+  @ApiResponse({ status: 200, description: 'Employee updated successfully' })
   @ApiResponse({ status: 404, description: 'Employee not found' })
   @UseInterceptors(
     FileInterceptor('file', {
@@ -115,11 +102,12 @@ export class EmployeesController {
       },
     }),
   )
-  updateProfilePicture(
+  update(
     @Param('id', ParseUUIDPipe) id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @Body() updateEmployeeDto: UpdateEmployeeDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.employeesService.updateProfilePicture(id, file);
+    return this.employeesService.update(id, updateEmployeeDto, file);
   }
 
   @Delete(':id')

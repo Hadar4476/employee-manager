@@ -15,8 +15,7 @@ const mockEmployee = {
 const mockEmployeesService = {
   findAll: jest.fn(),
   create: jest.fn(),
-  updateStatus: jest.fn(),
-  updateProfilePicture: jest.fn(),
+  update: jest.fn(),
   remove: jest.fn(),
 };
 
@@ -68,22 +67,26 @@ describe('EmployeesController', () => {
     });
   });
 
-  describe('updateStatus', () => {
-    it('should update employee status', async () => {
+  describe('update', () => {
+    it('should update employee', async () => {
       const updatedEmployee = {
         ...mockEmployee,
         status: EmployeeStatus.ON_VACATION,
       };
-      mockEmployeesService.updateStatus.mockResolvedValue(updatedEmployee);
 
-      const result = await controller.updateStatus(mockEmployee.id, {
-        status: EmployeeStatus.ON_VACATION,
-      });
+      mockEmployeesService.update.mockResolvedValue(updatedEmployee);
 
-      expect(result.status).toEqual(EmployeeStatus.ON_VACATION);
-      expect(mockEmployeesService.updateStatus).toHaveBeenCalledWith(
+      const result = await controller.update(
         mockEmployee.id,
         { status: EmployeeStatus.ON_VACATION },
+        undefined,
+      );
+
+      expect(result.status).toEqual(EmployeeStatus.ON_VACATION);
+      expect(mockEmployeesService.update).toHaveBeenCalledWith(
+        mockEmployee.id,
+        { status: EmployeeStatus.ON_VACATION },
+        undefined,
       );
     });
   });

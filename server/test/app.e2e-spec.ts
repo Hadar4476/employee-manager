@@ -81,30 +81,31 @@ describe('Employees (e2e)', () => {
     });
   });
 
-  describe('PATCH /employees/:id/status', () => {
+  describe('PATCH /employees/:id', () => {
     it('should update employee status and return 200', async () => {
       const response = await request(app.getHttpServer())
-        .patch(`/employees/${createdEmployeeId}/status`)
-        .send({ status: 'OnVacation' })
+        .patch(`/employees/${createdEmployeeId}`)
+        .field('status', 'OnVacation')
         .expect(200);
 
       const body = response.body as {
         status: string;
       };
+
       expect(body.status).toEqual('OnVacation');
     });
 
     it('should return 400 when status is invalid', async () => {
       await request(app.getHttpServer())
-        .patch(`/employees/${createdEmployeeId}/status`)
-        .send({ status: 'InvalidStatus' })
+        .patch(`/employees/${createdEmployeeId}`)
+        .field('status', 'InvalidStatus')
         .expect(400);
     });
 
     it('should return 404 when employee does not exist', async () => {
       await request(app.getHttpServer())
-        .patch('/employees/123e4567-e89b-12d3-a456-426614174000/status')
-        .send({ status: 'Working' })
+        .patch('/employees/123e4567-e89b-12d3-a456-426614174000')
+        .field('status', 'Working')
         .expect(404);
     });
   });
